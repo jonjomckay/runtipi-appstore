@@ -1,0 +1,177 @@
+version: "3.7"
+services:
+  dawarich-redis:
+    image: redis:7.0-alpine
+    container_name: dawarich-redis
+    command: redis-server
+    networks:
+      - tipi_main_network
+    volumes:
+      - ${APP_DATA_DIR}/data/shared:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  dawarich-db:
+    image: postgis/postgis:14-3.5-alpine
+    shm_size: 1G
+    container_name: dawarich-db
+    volumes:
+      - ${APP_DATA_DIR}/data/database:/var/lib/postgresql/data
+      - ${APP_DATA_DIR}/data/shared:/var/shared
+      # - ./postgresql.conf:/etc/postgresql/postgresql.conf # Optional, uncomment if you want to use a custom config
+    networks:
+      - tipi_main_network
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d dawarich_development" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    # command: postgres -c config_file=/etc/postgresql/postgresql.conf # Use custom config, uncomment if you want to use a custom config
+
+  dawarich:
+    image: freikin/dawarich:0.23.6
+    container_name: dawarich
+    volumes:
+      - ${APP_DATA_DIR}/data/public:/var/app/public
+      - ${APP_DATA_DIR}/data/import:/var/app/tmp/imports/watched
+    networks:
+      - tipi_main_network
+    ports:
+      - ${APP_PORT}:3000
+      # - 9394:9394 # Prometheus exporter, uncomment if needed
+    stdin_open: true
+    tty: true
+    entrypoint: web-entrypoint.sh
+    command: ['bin/rails', 'server', '-p', '3000', '-b', '::']
+    restart: unless-stopped
+    environment:
+      RAILS_ENV: development
+      REDIS_URL: redis://dawarich-redis:6379/0
+      DATABASE_HOST: dawarich-db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: password
+      DATABASE_NAME: dawarich_development
+      MIN_MINUTES_SPENT_IN_CITY: 60
+      APPLICATION_HOSTS: localhost
+      TIME_ZONE: Europe/London
+      APPLICATION_PROTOCOL: http
+      DISTANCE_UNIT: km
+      PROMETHEUS_EXPORTER_ENABLED: false
+      PROMETHEUS_EXPORTER_HOST: 0.0.0.0
+      PROMETHEUS_EXPORTER_PORT: 9394
+      ENABLE_TELEMETRY: false # More on telemetry: https://dawarich.app/docs/tutorials/telemetry
+      TZ=: ${TZ}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO - http://127.0.0.1:3000/api/v1/health | grep -q '\"status\"\\s*:\\s*\"ok\"'" ]
+      interval: 10s
+      retries: 30
+      start_period: 30s
+      timeout: 10s
+    depends_on:
+      dawarich-db:
+        condition: service_healthy
+        restart: true
+      dawarich-redis:
+        condition: service_healthy
+        restart: true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'    # Limit CPU usage to 50% of one core
+          memory: '4G'    # Limit memory usage to 4GB
+    labels:
+      # Main
+      traefik.enable: true
+      traefik.http.middlewares.dawarich-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.dawarich.loadbalancer.server.port: 3000 # Should be the same as the app internal port so for this example 9443
+      # Web
+      traefik.http.routers.dawarich-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.dawarich-insecure.entrypoints: web
+      traefik.http.routers.dawarich-insecure.service: dawarich
+      traefik.http.routers.dawarich-insecure.middlewares: dawarich-web-redirect
+      # Websecure
+      traefik.http.routers.dawarich.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.dawarich.entrypoints: websecure
+      traefik.http.routers.dawarich.service: dawarich
+      traefik.http.routers.dawarich.tls.certresolver: myresolver
+      # Local domain
+      traefik.http.routers.dawarich-local-insecure.rule: Host(`dawarich.${LOCAL_DOMAIN}`)
+      traefik.http.routers.dawarich-local-insecure.entrypoints: web
+      traefik.http.routers.dawarich-local-insecure.service: dawarich
+      traefik.http.routers.dawarich-local-insecure.middlewares: dawarich-web-redirect
+      # Local domain secure
+      traefik.http.routers.dawarich-local.rule: Host(`dawarich.${LOCAL_DOMAIN}`)
+      traefik.http.routers.dawarich-local.entrypoints: websecure
+      traefik.http.routers.dawarich-local.service: dawarich
+      traefik.http.routers.dawarich-local.tls: true
+      runtipi.managed: true
+
+  dawarich-sidekiq:
+    image: freikin/dawarich:latest
+    container_name: dawarich-sidekiq
+    volumes:
+      - ${APP_DATA_DIR}/data/public:/var/app/public
+      - ${APP_DATA_DIR}/data/import:/var/app/tmp/imports/watched
+    networks:
+      - tipi_main_network
+    stdin_open: true
+    tty: true
+    entrypoint: sidekiq-entrypoint.sh
+    command: ['sidekiq']
+    restart: unless-stopped
+    environment:
+      RAILS_ENV: development
+      REDIS_URL: redis://dawarich-redis:6379/0
+      DATABASE_HOST: dawarich-db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: password
+      DATABASE_NAME: dawarich_development
+      APPLICATION_HOSTS: localhost
+      BACKGROUND_PROCESSING_CONCURRENCY: 10
+      APPLICATION_PROTOCOL: http
+      DISTANCE_UNIT: km
+      PROMETHEUS_EXPORTER_ENABLED: false
+      PROMETHEUS_EXPORTER_HOST: dawarich
+      PROMETHEUS_EXPORTER_PORT: 9394
+      ENABLE_TELEMETRY: false # More on telemetry: https://dawarich.app/docs/tutorials/telemetry
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    healthcheck:
+      test: [ "CMD-SHELL", "bundle exec sidekiqmon processes | grep $${HOSTNAME}" ]
+      interval: 10s
+      retries: 30
+      start_period: 30s
+      timeout: 10s
+    depends_on:
+      dawarich-db:
+        condition: service_healthy
+        restart: true
+      dawarich-redis:
+        condition: service_healthy
+        restart: true
+      dawarich:
+        condition: service_healthy
+        restart: true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'    # Limit CPU usage to 50% of one core
+          memory: '4G'    # Limit memory usage to 4GB

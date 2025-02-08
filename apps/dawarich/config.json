@@ -1,0 +1,26 @@
+{
+  "$schema": "../schema.json",
+  "name": "Dawarich",
+  "id": "dawarich",
+  "available": true,
+  "short_desc": "A self-hosted alternative to Google Location History",
+  "author": "dawarich",
+  "port": 3874,
+  "categories": [
+    "data"
+  ],
+  "description": "Dawarich is a self-hosted web app designed to replace Google Timeline (aka Google Location History)",
+  "tipi_version": 1,
+  "version": "0.23.6",
+  "source": "https://github.com/Freika/dawarich",
+  "exposable": true,
+  "supported_architectures": [
+    "arm64",
+    "amd64"
+  ],
+  "uid": 1000,
+  "gid": 1000,
+  "form_fields": [],
+  "created_at": 1739025969000,
+  "updated_at": 1739025969000
+}

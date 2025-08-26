@@ -22,5 +22,6 @@
   "gid": 1000,
   "form_fields": [],
   "created_at": 1739025969000,
-  "updated_at": 1739025969000
+  "updated_at": 1739025969000,
+  "dynamic_config": true
 }

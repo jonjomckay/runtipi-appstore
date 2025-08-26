@@ -1,0 +1,40 @@
+{
+  "services": [
+    {
+      "name": "tvheadend",
+      "image": "lscr.io/linuxserver/tvheadend:version-dd82541c",
+      "environment": {
+        "PUID": "1000",
+        "PGID": "1000",
+        "RUN_OPTS": "${RUN_OPTS}",
+        "TZ": "${TZ}"
+      },
+      "internalPort": 9981,
+      "addPorts": [
+        {
+          "containerPort": 9982,
+          "hostPort": 9982,
+          "tcp": true,
+          "udp": false
+        }
+      ],
+      "volumes": [
+        {
+          "hostPath": "/etc/localtime",
+          "containerPath": "/etc/localtime",
+          "readOnly": true,
+          "shared": false,
+          "private": false
+        },
+        {
+          "hostPath": "${APP_DATA_DIR}/data",
+          "containerPath": "/config",
+          "readOnly": false,
+          "shared": false,
+          "private": false
+        }
+      ],
+      "isMain": true
+    }
+  ]
+}

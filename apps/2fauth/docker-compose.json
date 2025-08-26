@@ -2,7 +2,7 @@
   "services": [
     {
       "name": "2fauth",
-      "image": "2fauth/2fauth:5.5.2",
+      "image": "2fauth/2fauth:5.6.0",
       "internalPort": 8000,
       "isMain": true,
       "volumes": [
@@ -12,8 +12,8 @@
         }
       ],
       "environment": {
-        "ASSET_URL": "https://${APP_DOMAIN}",
-        "APP_URL": "https://${APP_DOMAIN}"
+        "ASSET_URL": "${APP_PROTOCOL:-http}://${APP_DOMAIN}",
+        "APP_URL": "${APP_PROTOCOL:-http}://${APP_DOMAIN}"
       }
     }
   ],

@@ -2,7 +2,7 @@
   "services": [
     {
       "name": "paperless-ngx",
-      "image": "ghcr.io/paperless-ngx/paperless-ngx:2.20.5",
+      "image": "ghcr.io/paperless-ngx/paperless-ngx:2.20.11",
       "isMain": true,
       "internalPort": 8000,
       "environment": [
@@ -103,7 +103,7 @@
     },
     {
       "name": "gotenberg",
-      "image": "gotenberg/gotenberg:8.25",
+      "image": "gotenberg/gotenberg:8.27",
       "command": ["gotenberg", "--chromium-disable-javascript=true", "--chromium-allow-list=file:///tmp/.*"]
     },
     {

@@ -2,7 +2,7 @@
   "services": [
     {
       "name": "halo",
-      "image": "halohub/halo:2.23.1",
+      "image": "halohub/halo:2.24.2",
       "isMain": true,
       "internalPort": 8090,
       "dependsOn": {
@@ -33,7 +33,7 @@
     },
     {
       "name": "halodb",
-      "image": "postgres:latest",
+      "image": "postgres:15.4",
       "environment": [
         {
           "key": "POSTGRES_PASSWORD",

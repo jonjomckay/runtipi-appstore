@@ -1,7 +1,7 @@
 services:
   n8n-2:
     container_name: n8n-2
-    image: n8nio/n8n:2.31.3
+    image: n8nio/n8n:2.34.4
     restart: unless-stopped
     ports:
       - ${APP_PORT}:5678
@@ -10,7 +10,7 @@ services:
     environment:
       - N8N_EDITOR_BASE_URL=${APP_PROTOCOL:-http}://${APP_DOMAIN}
       - N8N_SECURE_COOKIE=false
-      - WEBHOOK_URL=${APP_PROTOCOL:-http}://${APP_DOMAIN}
+      - N8N_WEBHOOK_URL=${APP_PROTOCOL:-http}://${APP_DOMAIN}
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=n8n-db
       - DB_POSTGRESDB_PORT=5432

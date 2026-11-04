@@ -2,7 +2,7 @@
   "services": [
     {
       "name": "cloudflared",
-      "image": "wisdomsky/cloudflared-web:2026.9.3",
+      "image": "wisdomsky/cloudflared-web:2026.10.7",
       "isMain": true,
       "internalPort": 14333,
       "networkMode": "host",
@@ -19,7 +19,7 @@
         },
         {
           "key": "BASIC_AUTH_PASS",
-          "value": "${BASIC_AUTH_PASS}"
+          "value": "${BASIC_AUTH_PASSWORD}"
         }
       ]
     }

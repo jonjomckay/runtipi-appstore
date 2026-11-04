@@ -2,7 +2,7 @@
   "services": [
     {
       "name": "hoarder",
-      "image": "ghcr.io/hoarder-app/hoarder:0.33.2",
+      "image": "ghcr.io/hoarder-app/hoarder:0.34.1",
       "isMain": true,
       "internalPort": 3000,
       "environment": [
@@ -59,7 +59,7 @@
     },
     {
       "name": "hoarder-meilisearch",
-      "image": "getmeili/meilisearch:v1.54",
+      "image": "getmeili/meilisearch:v1.55",
       "environment": [
         {
           "key": "MEILI_NO_ANALYTICS",

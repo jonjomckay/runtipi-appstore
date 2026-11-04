@@ -2,9 +2,10 @@
   "services": [
     {
       "name": "tubearchivist",
-      "image": "bbilly1/tubearchivist:v0.5.12",
+      "image": "bbilly1/tubearchivist:v0.6.0",
       "isMain": true,
       "internalPort": 8000,
+      "user": "1000:1000",
       "environment": [
         {
           "key": "ES_URL",
@@ -13,14 +14,6 @@
         {
           "key": "REDIS_CON",
           "value": "redis://tubearchivist-redis:6379"
-        },
-        {
-          "key": "HOST_UID",
-          "value": "1000"
-        },
-        {
-          "key": "HOST_GID",
-          "value": "1000"
         },
         {
           "key": "TA_USERNAME",
@@ -64,7 +57,7 @@
     },
     {
       "name": "tubearchivist-es",
-      "image": "elasticsearch:8.17.2",
+      "image": "elasticsearch:8.19.0",
       "environment": [
         {
           "key": "xpack.security.enabled",
